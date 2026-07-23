@@ -986,7 +986,7 @@ export default function App() {
           justifyContent: "space-between", boxSizing: "border-box", width: "100%",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 12, color: C.textDim, flexWrap: "wrap" }}>
-            <span style={{ fontWeight: 700, color: C.text }}>LB LATAM — Meteorite API</span>
+            <span style={{ fontWeight: 700, color: C.text }}>TSB Latam — Meteorite API</span>
             <span>Discord: <a href="#" style={{ color: C.accent, textDecoration: "none" }}>discord.gg/tsbl</a></span>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: C.win, display: "inline-block" }} />
@@ -994,7 +994,7 @@ export default function App() {
             </span>
             <span style={{ color: C.textMuted }}>Updated: {new Date(data.refreshed_at * 1000).toLocaleString()}</span>
           </div>
-          <span style={{ fontSize: 11, color: C.textMuted }}>© 2026 LB LATAM</span>
+          <span style={{ fontSize: 11, color: C.textMuted }}>© 2026 TSB Latam</span>
         </div>
       )}
 

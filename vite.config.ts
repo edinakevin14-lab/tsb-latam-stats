@@ -473,12 +473,31 @@ function discordRulesProxy(env: Record<string, string>): Plugin {
           }
           const messages = await r.json() as any[]
           const rules = messages
-            .filter(m => m.content && m.content.trim().length > 0)
-            .map(m => ({
-              id: m.id,
-              title: m.content?.split('\n')[0]?.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').slice(0, 100) || 'Rule',
-              text: m.content,
-            }))
+            .map(m => {
+              let title = ""
+              let text = ""
+              if (m.embeds && m.embeds.length > 0) {
+                const e = m.embeds[0]
+                title = e.title || ""
+                if (e.fields) {
+                  text = e.fields.map((f: any) => `**${f.name}**\n${f.value}`).join('\n\n')
+                }
+                if (e.description) {
+                  text = text ? text + '\n\n' + e.description : e.description
+                }
+              }
+              if (m.content && m.content.trim().length > 0) {
+                title = title || m.content?.split('\n')[0]?.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').slice(0, 100) || 'Rule'
+                text = text ? text + '\n\n' + m.content : m.content
+              }
+              if (!title && !text) return null
+              return {
+                id: m.id,
+                title: title || 'Rule',
+                text,
+              }
+            })
+            .filter((r): r is { id: string; title: string; text: string } => r !== null)
             .reverse()
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(rules))

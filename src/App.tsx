@@ -475,7 +475,7 @@ export default function App() {
           </div>
 
           {/* Content: recently registered + news */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 260px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 340px" }}>
             <div style={{ padding: "20px 24px" }}>
               <h4 style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 {search ? `Results (${filtered.length})` : "Recently Registered"}
@@ -483,7 +483,7 @@ export default function App() {
               {filtered.length === 0 ? (
                 <div style={{ padding: 20, color: C.textMuted, fontSize: 13, textAlign: "center" }}>No players found.</div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
                   {(search ? filtered : sortedPlayers.slice().reverse()).slice(0, 24).map((p, i) => {
                     const r = parseRank(p.rank)
                     return (
@@ -509,30 +509,27 @@ export default function App() {
             </div>
 
             {/* News column */}
-            <div style={{ overflowY: "auto" }}>
-              <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
-                <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{
-                    width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
-                    display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
-                  }} />
-                  News
-                </h4>
-              </div>
-              <div style={{ padding: "4px 0" }}>
-                {news.map((n, idx) => (
+            <div style={{ overflowY: "auto", background: C.elevated, padding: "20px 20px" }}>
+              <h4 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
+                  display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
+                }} />
+                News
+              </h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {news.map((n) => (
                   <div key={n.id} style={{
-                    padding: "14px 16px",
-                    borderBottom: idx < news.length - 1 ? `1px solid ${C.border}` : "none",
+                    padding: "14px 16px", background: C.surface, borderRadius: 6,
                   }}>
                     {n.imageUrl && (
-                      <div style={{ marginBottom: 8, borderRadius: 3, overflow: "hidden" }}>
-                        <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 110 }} />
+                      <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
+                        <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
                       </div>
                     )}
-                    <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3, color: C.text }}>{n.title}</div>
-                    <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 5 }}>{n.date}</div>
-                    <div style={{ fontSize: 12, color: C.textDim, lineHeight: 1.5 }}>{n.text}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
+                    <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
+                    <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
                   </div>
                 ))}
               </div>

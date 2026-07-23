@@ -542,7 +542,7 @@ export default function App() {
       {view === "home" && selected && (
         <div style={{
           maxWidth: 1100, margin: "0 auto", display: "grid",
-          gridTemplateColumns: "1fr 260px", background: C.surface,
+          gridTemplateColumns: "1fr 340px", background: C.surface,
           border: "none", borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           {/* Player detail */}
@@ -619,30 +619,27 @@ export default function App() {
           </div>
 
           {/* News column */}
-          <div style={{ overflowY: "auto" }}>
-            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
-              <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
-                  display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
-                }} />
-                News
-              </h4>
-            </div>
-            <div style={{ padding: "4px 0" }}>
-              {news.map((n, idx) => (
+          <div style={{ overflowY: "auto", background: C.elevated, padding: "20px 20px" }}>
+            <h4 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
+                display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
+              }} />
+              News
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {news.map((n) => (
                 <div key={n.id} style={{
-                  padding: "14px 16px",
-                  borderBottom: idx < news.length - 1 ? `1px solid ${C.border}` : "none",
+                  padding: "14px 16px", background: C.surface, borderRadius: 6,
                 }}>
                   {n.imageUrl && (
-                    <div style={{ marginBottom: 8, borderRadius: 3, overflow: "hidden" }}>
-                      <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 110 }} />
+                    <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
+                      <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
                     </div>
                   )}
-                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3, color: C.text }}>{n.title}</div>
-                  <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 5 }}>{n.date}</div>
-                  <div style={{ fontSize: 12, color: C.textDim, lineHeight: 1.5 }}>{n.text}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
+                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
                 </div>
               ))}
             </div>
@@ -652,7 +649,7 @@ export default function App() {
       {view === "rankings" && data && (
         <div style={{
           maxWidth: 1100, margin: "0 auto", display: "grid",
-          gridTemplateColumns: "1fr 260px", background: C.surface,
+          gridTemplateColumns: "1fr 340px", background: C.surface,
           border: "none", borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           <div style={{ padding: "24px 28px" }}>
@@ -721,30 +718,27 @@ export default function App() {
           </div>
 
           {/* News column */}
-          <div style={{ overflowY: "auto" }}>
-            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
-              <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
-                  display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
-                }} />
-                News
-              </h4>
-            </div>
-            <div style={{ padding: "4px 0" }}>
-              {news.map((n, idx) => (
+          <div style={{ overflowY: "auto", background: C.elevated, padding: "20px 20px" }}>
+            <h4 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
+                display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
+              }} />
+              News
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {news.map((n) => (
                 <div key={n.id} style={{
-                  padding: "14px 16px",
-                  borderBottom: idx < news.length - 1 ? `1px solid ${C.border}` : "none",
+                  padding: "14px 16px", background: C.surface, borderRadius: 6,
                 }}>
                   {n.imageUrl && (
-                    <div style={{ marginBottom: 8, borderRadius: 3, overflow: "hidden" }}>
-                      <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 110 }} />
+                    <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
+                      <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
                     </div>
                   )}
-                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3, color: C.text }}>{n.title}</div>
-                  <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 5 }}>{n.date}</div>
-                  <div style={{ fontSize: 12, color: C.textDim, lineHeight: 1.5 }}>{n.text}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
+                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
                 </div>
               ))}
             </div>
@@ -756,7 +750,7 @@ export default function App() {
       {view === "countries" && (
         <div style={{
           maxWidth: 1100, margin: "0 auto", display: "grid",
-          gridTemplateColumns: "220px 1fr 260px", background: C.surface,
+          gridTemplateColumns: "220px 1fr 340px", background: C.surface,
           border: "none", borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           {/* Left — region list */}
@@ -903,30 +897,27 @@ export default function App() {
           </div>
 
           {/* News column */}
-          <div style={{ overflowY: "auto" }}>
-            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
-              <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
-                  display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
-                }} />
-                News
-              </h4>
-            </div>
-            <div style={{ padding: "4px 0" }}>
-              {news.map((n, idx) => (
+          <div style={{ overflowY: "auto", background: C.elevated, padding: "20px 20px" }}>
+            <h4 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: "50%", background: "#ef4444",
+                display: "inline-block", animation: "blink 1.5s ease-in-out infinite",
+              }} />
+              News
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {news.map((n) => (
                 <div key={n.id} style={{
-                  padding: "14px 16px",
-                  borderBottom: idx < news.length - 1 ? `1px solid ${C.border}` : "none",
+                  padding: "14px 16px", background: C.surface, borderRadius: 6,
                 }}>
                   {n.imageUrl && (
-                    <div style={{ marginBottom: 8, borderRadius: 3, overflow: "hidden" }}>
-                      <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 110 }} />
+                    <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
+                      <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
                     </div>
                   )}
-                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3, color: C.text }}>{n.title}</div>
-                  <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 5 }}>{n.date}</div>
-                  <div style={{ fontSize: 12, color: C.textDim, lineHeight: 1.5 }}>{n.text}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
+                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
                 </div>
               ))}
             </div>

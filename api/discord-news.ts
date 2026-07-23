@@ -4,6 +4,7 @@ let channelCache: Map<string, string> | null = null
 let roleCache: Map<string, string> | null = null
 let roleColorCache: Map<string, number> | null = null
 let memberCache: Map<string, string | null> | null = null
+let newsCache: { data: any[]; ts: number } | null = null
 
 function resolveMentions(text: string, channels: Map<string, string>, roles: Map<string, string>) {
   return text
@@ -12,7 +13,21 @@ function resolveMentions(text: string, channels: Map<string, string>, roles: Map
     .replace(/<@!?(\d+)>/g, () => `\uE003user\uE004`)
 }
 
-export default async function handler(_req: any, res: any) {
+export default async function handler(req: any, res: any) {
+  res.setHeader("Allow", "GET")
+  res.setHeader("X-Content-Type-Options", "nosniff")
+
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" })
+    return
+  }
+
+  if (newsCache && Date.now() - newsCache.ts < 15000) {
+    res.setHeader("Content-Type", "application/json")
+    res.setHeader("Cache-Control", "public, s-maxage=15, stale-while-revalidate=300")
+    res.status(200).json(newsCache.data)
+    return
+  }
   const token = process.env.DISCORD_BOT_TOKEN
   const channelId = process.env.DISCORD_NEWS_CHANNEL_ID
   if (!token || !channelId) {
@@ -137,6 +152,9 @@ export default async function handler(_req: any, res: any) {
       })
     }
     news.reverse()
+    newsCache = { data: news, ts: Date.now() }
+    res.setHeader("Content-Type", "application/json")
+    res.setHeader("Cache-Control", "public, s-maxage=15, stale-while-revalidate=300")
     res.status(200).json(news)
   } catch {
     res.status(502).json({ error: "Failed to reach Discord API" })

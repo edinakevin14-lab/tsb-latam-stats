@@ -354,7 +354,7 @@ export default function App() {
         .then((items: NewsItem[]) => { if (items.length > 0) setNews(items) })
         .catch(() => {})
     fetchNews()
-    const interval = setInterval(fetchNews, 3000)
+    const interval = setInterval(fetchNews, 15000)
     return () => clearInterval(interval)
   }, [])
 

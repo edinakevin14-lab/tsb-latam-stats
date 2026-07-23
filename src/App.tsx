@@ -178,6 +178,85 @@ function Avatar({ url, name, size = 40 }: { url: string | null; name: string; si
   )
 }
 
+function parseInline(text: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = []
+  let remaining = text
+  let key = 0
+  const push = (n: React.ReactNode) => { nodes.push(<span key={key++}>{n}</span>) }
+  const patterns: { re: RegExp; render: (m: RegExpMatchArray) => React.ReactNode }[] = [
+    { re: /\*\*(.+?)\*\*/, render: m => <strong>{m[1]}</strong> },
+    { re: /__(.+?)__/, render: m => <u>{m[1]}</u> },
+    { re: /~~(.+?)~~/, render: m => <s>{m[1]}</s> },
+    { re: /\*(.+?)\*/, render: m => <em>{m[1]}</em> },
+    { re: /_(.+?)_/, render: m => <em>{m[1]}</em> },
+    { re: /`(.+?)`/, render: m => <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3, fontSize: 12 }}>{m[1]}</code> },
+  ]
+  while (remaining.length > 0) {
+    let earliest: { idx: number; match: RegExpMatchArray; render: (m: RegExpMatchArray) => React.ReactNode } | null = null
+    for (const p of patterns) {
+      const m = remaining.match(p.re)
+      if (m && m.index !== undefined) {
+        if (!earliest || m.index < earliest.idx) {
+          earliest = { idx: m.index, match: m, render: p.render }
+        }
+      }
+    }
+    if (!earliest) {
+      nodes.push(remaining)
+      break
+    }
+    if (earliest.idx > 0) push(remaining.slice(0, earliest.idx))
+    push(earliest.render(earliest.match))
+    remaining = remaining.slice(earliest.idx + earliest.match[0].length)
+  }
+  return nodes
+}
+
+function DiscordMarkdown({ text }: { text: string }) {
+  const lines = text.split('\n')
+  const elements: React.ReactNode[] = []
+  let listItems: string[] = []
+  let key = 0
+  const flushList = () => {
+    if (listItems.length === 0) return
+    elements.push(
+      <ul key={key++} style={{ margin: "4px 0", paddingLeft: 20, listStyle: "none" }}>
+        {listItems.map((item, i) => (
+          <li key={i} style={{ display: "flex", gap: 6, marginBottom: 2 }}>
+            <span style={{ color: C.textMuted }}>•</span>
+            <span>{parseInline(item)}</span>
+          </li>
+        ))}
+      </ul>
+    )
+    listItems = []
+  }
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed === '') { flushList(); continue }
+    if (/^###\s+/.test(trimmed)) {
+      flushList()
+      elements.push(<div key={key++} style={{ fontSize: 15, fontWeight: 700, margin: "8px 0 4px", color: C.text }}>{parseInline(trimmed.replace(/^###\s*/, ''))}</div>)
+    } else if (/^##\s+/.test(trimmed)) {
+      flushList()
+      elements.push(<div key={key++} style={{ fontSize: 16, fontWeight: 800, margin: "10px 0 4px", color: C.text }}>{parseInline(trimmed.replace(/^##\s*/, ''))}</div>)
+    } else if (/^#\s+/.test(trimmed)) {
+      flushList()
+      elements.push(<div key={key++} style={{ fontSize: 18, fontWeight: 900, margin: "10px 0 6px", color: C.text }}>{parseInline(trimmed.replace(/^#\s*/, ''))}</div>)
+    } else if (/^>\s?/.test(trimmed)) {
+      flushList()
+      elements.push(<div key={key++} style={{ borderLeft: `3px solid ${C.borderLight}`, paddingLeft: 12, margin: "4px 0", color: C.textDim }}>{parseInline(trimmed.replace(/^>\s?/, ''))}</div>)
+    } else if (/^[-*]\s+/.test(trimmed)) {
+      listItems.push(trimmed.replace(/^[-*]\s+/, ''))
+    } else {
+      flushList()
+      elements.push(<div key={key++} style={{ margin: "3px 0", color: C.textDim }}>{parseInline(trimmed)}</div>)
+    }
+  }
+  flushList()
+  return <div style={{ fontSize: 13, lineHeight: 1.6 }}>{elements}</div>
+}
+
 function Select({ value, onChange, options, label }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; label: string }) {
   return (
     <select
@@ -527,7 +606,7 @@ export default function App() {
                     )}
                     <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
                     <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
-                    <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
+                    {n.text && <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6 }}><DiscordMarkdown text={n.text} /></div>}
                   </div>
                 ))}
               </div>

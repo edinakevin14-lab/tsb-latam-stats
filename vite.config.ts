@@ -416,23 +416,44 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
           }
           const messages = await r.json() as any[]
           const today = new Date().toISOString().slice(0, 10)
+          const stripMd = (s: string) => s.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').trim()
           const news = messages
-            .filter(m => m.content && m.content.trim().length > 0)
             .filter(m => new Date(m.timestamp).toISOString().slice(0, 10) >= today)
             .map(m => {
-              const lines = m.content.split('\n').filter((l: string) => l.trim())
-              const firstLine = lines[0] || 'Announcement'
-              const title = firstLine.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').slice(0, 80)
-              const text = m.content
+              let title = "Announcement"
+              let description = ""
+              let imageUrl: string | undefined
+
+              if (m.content && m.content.trim()) {
+                const lines = m.content.split('\n')
+                title = stripMd(lines[0]) || "Announcement"
+                description = lines.slice(1).join('\n').trim()
+              }
+
+              if (m.embeds && m.embeds.length > 0) {
+                const e = m.embeds[0]
+                if (e.title && !m.content?.trim()) title = stripMd(e.title)
+                if (e.description) {
+                  description = description ? description + '\n\n' + e.description : e.description
+                }
+                if (e.image?.url) imageUrl = e.image.url
+                if (e.thumbnail?.url && !imageUrl) imageUrl = e.thumbnail.url
+              }
+
+              if (!imageUrl && m.attachments?.[0]?.content_type?.startsWith('image/')) {
+                imageUrl = m.attachments[0].url
+              }
+
+              if (!title && !description && !imageUrl) return null
               return {
                 id: m.id,
-                title: title || 'Announcement',
-                text,
+                title,
+                text: description,
                 date: new Date(m.timestamp).toISOString().slice(0, 10),
-                imageUrl: m.attachments?.[0]?.content_type?.startsWith('image/')
-                  ? m.attachments[0].url : undefined,
+                imageUrl,
               }
             })
+            .filter((n: any) => n !== null)
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(news))
         } catch {

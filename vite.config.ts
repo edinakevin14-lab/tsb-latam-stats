@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       meteoriteProxy(env),
       discordNewsProxy(env),
+      discordRulesProxy(env),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
@@ -435,6 +436,52 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
             })
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(news))
+        } catch {
+          res.statusCode = 502
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Failed to reach Discord API' }))
+        }
+      })
+    },
+  }
+}
+
+/** Fetches messages from a Discord rules channel (read-only, fetched once). */
+function discordRulesProxy(env: Record<string, string>): Plugin {
+  const token = env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN
+  const channelId = env.DISCORD_RULES_CHANNEL_ID || process.env.DISCORD_RULES_CHANNEL_ID
+  return {
+    name: 'discord-rules-proxy',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/api/discord-rules', async (_req, res) => {
+        if (!token || !channelId) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'DISCORD_BOT_TOKEN or DISCORD_RULES_CHANNEL_ID not configured' }))
+          return
+        }
+        try {
+          const r = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=50`, {
+            headers: { Authorization: `Bot ${token}` },
+          })
+          if (!r.ok) {
+            res.statusCode = r.status
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: `Discord API ${r.status}` }))
+            return
+          }
+          const messages = await r.json() as any[]
+          const rules = messages
+            .filter(m => m.content && m.content.trim().length > 0)
+            .map(m => ({
+              id: m.id,
+              title: m.content?.split('\n')[0]?.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').slice(0, 100) || 'Rule',
+              text: m.content,
+            }))
+            .reverse()
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(rules))
         } catch {
           res.statusCode = 502
           res.setHeader('Content-Type', 'application/json')

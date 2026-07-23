@@ -266,6 +266,15 @@ export default function App() {
       })
   }, [])
 
+  useEffect(() => {
+    fetch("/api/discord-news")
+      .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json() })
+      .then((items: NewsItem[]) => {
+        if (items.length > 0) setNews(items)
+      })
+      .catch(() => {})
+  }, [])
+
   const sortedPlayers = data
     ? [...data.registered_players].sort((a, b) => rankValue(a.rank) - rankValue(b.rank))
     : []

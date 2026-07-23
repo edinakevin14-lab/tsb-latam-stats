@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       meteoriteProxy(env),
+      discordNewsProxy(env),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
@@ -382,6 +383,55 @@ function meteoriteProxy(env: Record<string, string>): Plugin {
           res.statusCode = 502
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ error: 'Failed to reach Meteorite API' }))
+        }
+      })
+    },
+  }
+}
+
+/** Fetches crossposted (published) messages from a Discord announcement channel. */
+function discordNewsProxy(env: Record<string, string>): Plugin {
+  const token = env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN
+  const channelId = env.DISCORD_NEWS_CHANNEL_ID || process.env.DISCORD_NEWS_CHANNEL_ID
+  const IS_CROSSPOSTED = 1 << 5
+  return {
+    name: 'discord-news-proxy',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/api/discord-news', async (_req, res) => {
+        if (!token || !channelId) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'DISCORD_BOT_TOKEN or DISCORD_NEWS_CHANNEL_ID not configured' }))
+          return
+        }
+        try {
+          const r = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=50`, {
+            headers: { Authorization: `Bot ${token}` },
+          })
+          if (!r.ok) {
+            res.statusCode = r.status
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: `Discord API ${r.status}` }))
+            return
+          }
+          const messages = await r.json() as any[]
+          const news = messages
+            .filter(m => (m.flags & IS_CROSSPOSTED) === IS_CROSSPOSTED)
+            .map(m => ({
+              id: m.id,
+              title: m.content?.split('\n')[0]?.slice(0, 80) || 'Announcement',
+              text: m.content || '',
+              date: new Date(m.timestamp).toISOString().slice(0, 10),
+              imageUrl: m.attachments?.[0]?.content_type?.startsWith('image/')
+                ? m.attachments[0].url : undefined,
+            }))
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(news))
+        } catch {
+          res.statusCode = 502
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Failed to reach Discord API' }))
         }
       })
     },

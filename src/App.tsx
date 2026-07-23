@@ -67,11 +67,7 @@ const C = {
   lossBg: "#2a1212",
 }
 
-const initialNews: NewsItem[] = [
-  { id: 1, title: "Leaderboard updated", date: "2026-07-20", text: "The ranking has been updated with the latest results. Ayato leads at position #1." },
-  { id: 2, title: "Phase 1 finals coming up", date: "2026-07-18", text: "Phase 1 finals are approaching. The best LATAM players are preparing." },
-  { id: 3, title: "Brazil vs LATAM tournament", date: "2026-07-15", text: "A tournament between Brazil and the rest of LATAM is coming soon. More info on Discord." },
-]
+const initialNews: NewsItem[] = []
 
 const FLAG_FILES: Record<string, string> = {
   AR: "AR", BR: "BR", CL: "CL", CU: "CU", EC: "EC",
@@ -518,7 +514,9 @@ export default function App() {
                 News
               </h4>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {news.map((n) => (
+                {news.length === 0 ? (
+                  <div style={{ color: C.textMuted, fontSize: 13, padding: "20px 0", textAlign: "center" }}>No news yet.</div>
+                ) : news.map((n) => (
                   <div key={n.id} style={{
                     padding: "14px 16px", background: C.surface, borderRadius: 6,
                   }}>

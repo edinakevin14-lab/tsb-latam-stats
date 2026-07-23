@@ -183,7 +183,17 @@ function parseInline(text: string): React.ReactNode[] {
   let remaining = text
   let key = 0
   const push = (n: React.ReactNode) => { nodes.push(<span key={key++}>{n}</span>) }
+  const mentionStyle = {
+    background: C.accentSoft,
+    color: C.accent,
+    borderRadius: 3,
+    padding: "0 4px",
+    fontSize: 12.5,
+    fontWeight: 600,
+  }
   const patterns: { re: RegExp; render: (m: RegExpMatchArray) => React.ReactNode }[] = [
+    { re: /\uE001(.+?)\uE002/, render: m => <span style={mentionStyle}>#{m[1]}</span> },
+    { re: /\uE003(.+?)\uE004/, render: m => <span style={mentionStyle}>@{m[1]}</span> },
     { re: /\*\*(.+?)\*\*/, render: m => <strong>{m[1]}</strong> },
     { re: /__(.+?)__/, render: m => <u>{m[1]}</u> },
     { re: /~~(.+?)~~/, render: m => <s>{m[1]}</s> },

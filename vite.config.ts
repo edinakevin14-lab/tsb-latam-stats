@@ -422,9 +422,9 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
 
   function resolveMentions(text: string, channels: Map<string, string>, roles: Map<string, string>) {
     return text
-      .replace(/<#(\d+)>/g, (_, id) => `#${channels.get(id) || 'channel'}`)
-      .replace(/<@&(\d+)>/g, (_, id) => `@${roles.get(id) || 'role'}`)
-      .replace(/<@(\d+)>/g, () => `@user`)
+      .replace(/<#(\d+)>/g, (_, id) => `\uE001${channels.get(id) || 'channel'}\uE002`)
+      .replace(/<@&(\d+)>/g, (_, id) => `\uE003${roles.get(id) || 'role'}\uE004`)
+      .replace(/<@!?(\d+)>/g, () => `\uE003user\uE004`)
   }
 
   return {
@@ -452,22 +452,51 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
           const messages = await r.json() as any[]
           const today = new Date().toISOString().slice(0, 10)
           const stripMd = (s: string) => s.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').trim()
-          const news = messages
+
+          const todayMsgs = messages
             .filter(m => new Date(m.timestamp).toISOString().slice(0, 10) >= today)
-            .map(m => {
+            .reverse()
+
+          const grouped: any[] = []
+          for (const m of todayMsgs) {
+            const last = grouped[grouped.length - 1]
+            if (last && last.author === m.author && Math.abs(new Date(m.timestamp).getTime() - last.timestamp) < 5 * 60 * 1000) {
+              if (m.content && m.content.trim()) last.contents.push(m.content)
+              if (m.attachments?.[0]?.content_type?.startsWith('image/') && !last.imageUrl) {
+                last.imageUrl = m.attachments[0].url
+              }
+              if (m.embeds?.[0]) {
+                last.embeds.push(m.embeds[0])
+              }
+              last.timestamp = new Date(m.timestamp).getTime()
+            } else {
+              grouped.push({
+                id: m.id,
+                author: m.author,
+                timestamp: new Date(m.timestamp).getTime(),
+                contents: m.content && m.content.trim() ? [m.content] : [],
+                embeds: m.embeds || [],
+                attachments: m.attachments || [],
+                imageUrl: m.attachments?.[0]?.content_type?.startsWith('image/') ? m.attachments[0].url : undefined,
+              })
+            }
+          }
+
+          const news = grouped
+            .map(g => {
               let title = "Announcement"
               let description = ""
-              let imageUrl: string | undefined
+              let imageUrl = g.imageUrl
 
-              if (m.content && m.content.trim()) {
-                const lines = m.content.split('\n')
+              const allContent = g.contents.join('\n\n')
+              if (allContent.trim()) {
+                const lines = allContent.split('\n')
                 title = stripMd(resolveMentions(lines[0], channels, roles)) || "Announcement"
                 description = resolveMentions(lines.slice(1).join('\n').trim(), channels, roles)
               }
 
-              if (m.embeds && m.embeds.length > 0) {
-                const e = m.embeds[0]
-                if (e.title && !m.content?.trim()) title = stripMd(resolveMentions(e.title, channels, roles))
+              for (const e of g.embeds) {
+                if (e.title && !allContent.trim()) title = stripMd(resolveMentions(e.title, channels, roles))
                 if (e.description) {
                   const desc = resolveMentions(e.description, channels, roles)
                   description = description ? description + '\n\n' + desc : desc
@@ -476,20 +505,17 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
                 if (e.thumbnail?.url && !imageUrl) imageUrl = e.thumbnail.url
               }
 
-              if (!imageUrl && m.attachments?.[0]?.content_type?.startsWith('image/')) {
-                imageUrl = m.attachments[0].url
-              }
-
               if (!title && !description && !imageUrl) return null
               return {
-                id: m.id,
+                id: g.id,
                 title,
                 text: description,
-                date: new Date(m.timestamp).toISOString().slice(0, 10),
+                date: new Date(g.timestamp).toISOString().slice(0, 10),
                 imageUrl,
               }
             })
             .filter((n: any) => n !== null)
+            .reverse()
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(news))
         } catch {

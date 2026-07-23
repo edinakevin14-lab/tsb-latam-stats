@@ -389,11 +389,10 @@ function meteoriteProxy(env: Record<string, string>): Plugin {
   }
 }
 
-/** Fetches crossposted (published) messages from a Discord announcement channel. */
+/** Fetches messages from a Discord announcement channel. */
 function discordNewsProxy(env: Record<string, string>): Plugin {
   const token = env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN
   const channelId = env.DISCORD_NEWS_CHANNEL_ID || process.env.DISCORD_NEWS_CHANNEL_ID
-  const IS_CROSSPOSTED = 1 << 5
   return {
     name: 'discord-news-proxy',
     apply: 'serve',
@@ -406,7 +405,7 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
           return
         }
         try {
-          const r = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=50`, {
+          const r = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=20`, {
             headers: { Authorization: `Bot ${token}` },
           })
           if (!r.ok) {
@@ -417,15 +416,21 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
           }
           const messages = await r.json() as any[]
           const news = messages
-            .filter(m => (m.flags & IS_CROSSPOSTED) === IS_CROSSPOSTED)
-            .map(m => ({
-              id: m.id,
-              title: m.content?.split('\n')[0]?.slice(0, 80) || 'Announcement',
-              text: m.content || '',
-              date: new Date(m.timestamp).toISOString().slice(0, 10),
-              imageUrl: m.attachments?.[0]?.content_type?.startsWith('image/')
-                ? m.attachments[0].url : undefined,
-            }))
+            .filter(m => m.content && m.content.trim().length > 0)
+            .map(m => {
+              const lines = m.content.split('\n').filter((l: string) => l.trim())
+              const firstLine = lines[0] || 'Announcement'
+              const title = firstLine.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').slice(0, 80)
+              const text = m.content
+              return {
+                id: m.id,
+                title: title || 'Announcement',
+                text,
+                date: new Date(m.timestamp).toISOString().slice(0, 10),
+                imageUrl: m.attachments?.[0]?.content_type?.startsWith('image/')
+                  ? m.attachments[0].url : undefined,
+              }
+            })
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(news))
         } catch {

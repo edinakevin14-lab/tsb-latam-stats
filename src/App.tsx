@@ -479,9 +479,6 @@ export default function App() {
             <button onClick={() => setView("countries")} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: view === "countries" ? 700 : 400, color: view === "countries" ? C.accent : C.textDim, fontSize: 14 }}>Region Ranking</button>
           </nav>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 16, color: C.textDim }}>▾</span>
-        </div>
       </div>
 
       {/* Home — Dashboard (no player selected) */}

@@ -393,6 +393,40 @@ function meteoriteProxy(env: Record<string, string>): Plugin {
 function discordNewsProxy(env: Record<string, string>): Plugin {
   const token = env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN
   const channelId = env.DISCORD_NEWS_CHANNEL_ID || process.env.DISCORD_NEWS_CHANNEL_ID
+  const guildId = "1241243439283048470"
+
+  let channelCache: Map<string, string> | null = null
+  let roleCache: Map<string, string> | null = null
+
+  async function getMentionMaps() {
+    if (channelCache && roleCache) return { channels: channelCache, roles: roleCache }
+    const headers = { Authorization: `Bot ${token}` }
+    try {
+      const [chRes, rlRes] = await Promise.all([
+        fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, { headers }),
+        fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, { headers }),
+      ])
+      channelCache = new Map<string, string>()
+      roleCache = new Map<string, string>()
+      if (chRes.ok) {
+        const channels = await chRes.json() as any[]
+        for (const c of channels) channelCache.set(c.id, c.name)
+      }
+      if (rlRes.ok) {
+        const roles = await rlRes.json() as any[]
+        for (const r of roles) roleCache.set(r.id, r.name)
+      }
+    } catch {}
+    return { channels: channelCache!, roles: roleCache! }
+  }
+
+  function resolveMentions(text: string, channels: Map<string, string>, roles: Map<string, string>) {
+    return text
+      .replace(/<#(\d+)>/g, (_, id) => `#${channels.get(id) || 'channel'}`)
+      .replace(/<@&(\d+)>/g, (_, id) => `@${roles.get(id) || 'role'}`)
+      .replace(/<@(\d+)>/g, () => `@user`)
+  }
+
   return {
     name: 'discord-news-proxy',
     apply: 'serve',
@@ -405,6 +439,7 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
           return
         }
         try {
+          const { channels, roles } = await getMentionMaps()
           const r = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=20`, {
             headers: { Authorization: `Bot ${token}` },
           })
@@ -426,15 +461,16 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
 
               if (m.content && m.content.trim()) {
                 const lines = m.content.split('\n')
-                title = stripMd(lines[0]) || "Announcement"
-                description = lines.slice(1).join('\n').trim()
+                title = stripMd(resolveMentions(lines[0], channels, roles)) || "Announcement"
+                description = resolveMentions(lines.slice(1).join('\n').trim(), channels, roles)
               }
 
               if (m.embeds && m.embeds.length > 0) {
                 const e = m.embeds[0]
-                if (e.title && !m.content?.trim()) title = stripMd(e.title)
+                if (e.title && !m.content?.trim()) title = stripMd(resolveMentions(e.title, channels, roles))
                 if (e.description) {
-                  description = description ? description + '\n\n' + e.description : e.description
+                  const desc = resolveMentions(e.description, channels, roles)
+                  description = description ? description + '\n\n' + desc : desc
                 }
                 if (e.image?.url) imageUrl = e.image.url
                 if (e.thumbnail?.url && !imageUrl) imageUrl = e.thumbnail.url

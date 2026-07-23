@@ -397,9 +397,11 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
 
   let channelCache: Map<string, string> | null = null
   let roleCache: Map<string, string> | null = null
+  let roleColorCache: Map<string, number> | null = null
+  let memberCache: Map<string, { color: string | null }> | null = null
 
   async function getMentionMaps() {
-    if (channelCache && roleCache) return { channels: channelCache, roles: roleCache }
+    if (channelCache && roleCache && roleColorCache) return { channels: channelCache, roles: roleCache, roleColors: roleColorCache }
     const headers = { Authorization: `Bot ${token}` }
     try {
       const [chRes, rlRes] = await Promise.all([
@@ -408,16 +410,43 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
       ])
       channelCache = new Map<string, string>()
       roleCache = new Map<string, string>()
+      roleColorCache = new Map<string, number>()
       if (chRes.ok) {
         const channels = await chRes.json() as any[]
         for (const c of channels) channelCache.set(c.id, c.name)
       }
       if (rlRes.ok) {
         const roles = await rlRes.json() as any[]
-        for (const r of roles) roleCache.set(r.id, r.name)
+        for (const r of roles) {
+          roleCache.set(r.id, r.name)
+          if (r.color) roleColorCache.set(r.id, r.color)
+        }
       }
     } catch {}
-    return { channels: channelCache!, roles: roleCache! }
+    return { channels: channelCache!, roles: roleCache!, roleColors: roleColorCache! }
+  }
+
+  async function getMemberColor(userId: string, roleColors: Map<string, number>): Promise<string | null> {
+    if (!memberCache) memberCache = new Map()
+    if (memberCache.has(userId)) return memberCache.get(userId)!.color
+    memberCache.set(userId, { color: null })
+    try {
+      const r = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${userId}`, {
+        headers: { Authorization: `Bot ${token}` },
+      })
+      if (r.ok) {
+        const member = await r.json() as any
+        let topColor: number | null = null
+        for (const roleId of (member.roles || [])) {
+          const c = roleColors.get(roleId)
+          if (c && (topColor === null || c > topColor)) topColor = c
+        }
+        const hex = topColor !== null ? '#' + topColor.toString(16).padStart(6, '0') : null
+        memberCache.set(userId, { color: hex })
+        return hex
+      }
+    } catch {}
+    return null
   }
 
   function resolveMentions(text: string, channels: Map<string, string>, roles: Map<string, string>) {
@@ -439,7 +468,7 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
           return
         }
         try {
-          const { channels, roles } = await getMentionMaps()
+          const { channels, roles, roleColors } = await getMentionMaps()
           const r = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=20`, {
             headers: { Authorization: `Bot ${token}` },
           })
@@ -482,42 +511,42 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
             }
           }
 
-          const news = grouped
-            .map(g => {
-              let title = "Announcement"
-              let description = ""
-              let imageUrl = g.imageUrl
+          const news: any[] = []
+          for (const g of grouped) {
+            let title = "Announcement"
+            let description = ""
+            let imageUrl = g.imageUrl
 
-              const allContent = g.contents.join('\n\n')
-              if (allContent.trim()) {
-                const lines = allContent.split('\n')
-                title = stripMd(resolveMentions(lines[0], channels, roles)) || "Announcement"
-                description = resolveMentions(lines.slice(1).join('\n').trim(), channels, roles)
-              }
+            const allContent = g.contents.join('\n\n')
+            if (allContent.trim()) {
+              const lines = allContent.split('\n')
+              title = stripMd(resolveMentions(lines[0], channels, roles)) || "Announcement"
+              description = resolveMentions(lines.slice(1).join('\n').trim(), channels, roles)
+            }
 
-              for (const e of g.embeds) {
-                if (e.title && !allContent.trim()) title = stripMd(resolveMentions(e.title, channels, roles))
-                if (e.description) {
-                  const desc = resolveMentions(e.description, channels, roles)
-                  description = description ? description + '\n\n' + desc : desc
-                }
-                if (e.image?.url) imageUrl = e.image.url
-                if (e.thumbnail?.url && !imageUrl) imageUrl = e.thumbnail.url
+            for (const e of g.embeds) {
+              if (e.title && !allContent.trim()) title = stripMd(resolveMentions(e.title, channels, roles))
+              if (e.description) {
+                const desc = resolveMentions(e.description, channels, roles)
+                description = description ? description + '\n\n' + desc : desc
               }
+              if (e.image?.url) imageUrl = e.image.url
+              if (e.thumbnail?.url && !imageUrl) imageUrl = e.thumbnail.url
+            }
 
-              if (!title && !description && !imageUrl) return null
-              return {
-                id: g.id,
-                title,
-                text: description,
-                author: g.author?.display_name || g.author?.username || g.author?.global_name || "Unknown",
-                authorAvatar: g.author?.avatar ? `https://cdn.discordapp.com/avatars/${g.author.id}/${g.author.avatar}.png?size=64` : undefined,
-                date: new Date(g.timestamp).toISOString().slice(0, 10),
-                imageUrl,
-              }
+            if (!title && !description && !imageUrl) continue
+            news.push({
+              id: g.id,
+              title,
+              text: description,
+              author: g.author?.display_name || g.author?.username || g.author?.global_name || "Unknown",
+              authorAvatar: g.author?.avatar ? `https://cdn.discordapp.com/avatars/${g.author.id}/${g.author.avatar}.png?size=64` : undefined,
+              authorColor: await getMemberColor(g.author?.id || "", roleColors),
+              date: new Date(g.timestamp).toISOString().slice(0, 10),
+              imageUrl,
             })
-            .filter((n: any) => n !== null)
-            .reverse()
+          }
+          news.reverse()
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(news))
         } catch {

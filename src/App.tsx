@@ -315,6 +315,7 @@ export default function App() {
   const [news, setNews] = useState<NewsItem[]>(initialNews)
 
   const [adminOpen, setAdminOpen] = useState(false)
+  const [newsModal, setNewsModal] = useState<NewsItem | null>(null)
   const [adminPass, setAdminPass] = useState("")
   const [adminAuthed, setAdminAuthed] = useState(false)
   const [adminError, setAdminError] = useState("")
@@ -597,8 +598,8 @@ export default function App() {
                   <div style={{ color: C.textMuted, fontSize: 13, padding: "20px 0", textAlign: "center" }}>No news yet.</div>
                 ) : news.map((n) => (
                   <div key={n.id} style={{
-                    padding: "14px 16px", background: C.surface, borderRadius: 6,
-                  }}>
+                    padding: "14px 16px", background: C.surface, borderRadius: 6, cursor: "pointer",
+                  }} onClick={() => setNewsModal(n)}>
                     {n.imageUrl && (
                       <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
                         <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
@@ -606,7 +607,7 @@ export default function App() {
                     )}
                     <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
                     <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
-                    {n.text && <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6 }}><DiscordMarkdown text={n.text} /></div>}
+                    {n.text && <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, maxHeight: 66, overflow: "hidden" }}><DiscordMarkdown text={n.text} /></div>}
                   </div>
                 ))}
               </div>
@@ -707,8 +708,8 @@ export default function App() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {news.map((n) => (
                 <div key={n.id} style={{
-                  padding: "14px 16px", background: C.surface, borderRadius: 6,
-                }}>
+                  padding: "14px 16px", background: C.surface, borderRadius: 6, cursor: "pointer",
+                }} onClick={() => setNewsModal(n)}>
                   {n.imageUrl && (
                     <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
                       <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
@@ -716,7 +717,7 @@ export default function App() {
                   )}
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
                   <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
-                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
+                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, maxHeight: 66, overflow: "hidden" }}><DiscordMarkdown text={n.text} /></div>
                 </div>
               ))}
             </div>
@@ -806,8 +807,8 @@ export default function App() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {news.map((n) => (
                 <div key={n.id} style={{
-                  padding: "14px 16px", background: C.surface, borderRadius: 6,
-                }}>
+                  padding: "14px 16px", background: C.surface, borderRadius: 6, cursor: "pointer",
+                }} onClick={() => setNewsModal(n)}>
                   {n.imageUrl && (
                     <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
                       <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
@@ -815,7 +816,7 @@ export default function App() {
                   )}
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
                   <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
-                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
+                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, maxHeight: 66, overflow: "hidden" }}><DiscordMarkdown text={n.text} /></div>
                 </div>
               ))}
             </div>
@@ -985,8 +986,8 @@ export default function App() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {news.map((n) => (
                 <div key={n.id} style={{
-                  padding: "14px 16px", background: C.surface, borderRadius: 6,
-                }}>
+                  padding: "14px 16px", background: C.surface, borderRadius: 6, cursor: "pointer",
+                }} onClick={() => setNewsModal(n)}>
                   {n.imageUrl && (
                     <div style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden" }}>
                       <img src={n.imageUrl} alt={n.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 140 }} />
@@ -994,7 +995,7 @@ export default function App() {
                   )}
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
                   <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
-                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{n.text}</div>
+                  <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, maxHeight: 66, overflow: "hidden" }}><DiscordMarkdown text={n.text} /></div>
                 </div>
               ))}
             </div>
@@ -1019,6 +1020,23 @@ export default function App() {
             <span style={{ color: C.textMuted }}>Updated: {new Date(data.refreshed_at * 1000).toLocaleString()}</span>
           </div>
           <span style={{ fontSize: 11, color: C.textMuted }}>© 2026 LB LATAM</span>
+        </div>
+      )}
+
+      {/* News modal */}
+      {newsModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20 }} onClick={() => setNewsModal(null)}>
+          <div style={{ background: C.surface, borderRadius: 8, padding: 28, width: 540, maxWidth: "90vw", maxHeight: "80vh", overflowY: "auto", boxSizing: "border-box" }} onClick={e => e.stopPropagation()}>
+            {newsModal.imageUrl && (
+              <div style={{ marginBottom: 16, borderRadius: 6, overflow: "hidden" }}>
+                <img src={newsModal.imageUrl} alt={newsModal.title} style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 280 }} />
+              </div>
+            )}
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, color: C.text }}>{newsModal.title}</div>
+            <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 16 }}>{newsModal.date}</div>
+            {newsModal.text && <div style={{ fontSize: 14, color: C.textDim, lineHeight: 1.7 }}><DiscordMarkdown text={newsModal.text} /></div>}
+            <button onClick={() => setNewsModal(null)} style={{ marginTop: 20, padding: "8px 16px", background: C.elevated, border: `1px solid ${C.borderLight}`, borderRadius: 4, cursor: "pointer", color: C.textDim, fontSize: 13 }}>Close</button>
+          </div>
         </div>
       )}
 

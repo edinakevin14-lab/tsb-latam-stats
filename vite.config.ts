@@ -22,7 +22,6 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       meteoriteProxy(env),
       discordNewsProxy(env),
-      discordRulesProxy(env),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
@@ -436,71 +435,6 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
             })
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(news))
-        } catch {
-          res.statusCode = 502
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ error: 'Failed to reach Discord API' }))
-        }
-      })
-    },
-  }
-}
-
-/** Fetches messages from a Discord rules channel (read-only, fetched once). */
-function discordRulesProxy(env: Record<string, string>): Plugin {
-  const token = env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN
-  const channelId = env.DISCORD_RULES_CHANNEL_ID || process.env.DISCORD_RULES_CHANNEL_ID
-  return {
-    name: 'discord-rules-proxy',
-    apply: 'serve',
-    configureServer(server) {
-      server.middlewares.use('/api/discord-rules', async (_req, res) => {
-        if (!token || !channelId) {
-          res.statusCode = 500
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ error: 'DISCORD_BOT_TOKEN or DISCORD_RULES_CHANNEL_ID not configured' }))
-          return
-        }
-        try {
-          const r = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=50`, {
-            headers: { Authorization: `Bot ${token}` },
-          })
-          if (!r.ok) {
-            res.statusCode = r.status
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ error: `Discord API ${r.status}` }))
-            return
-          }
-          const messages = await r.json() as any[]
-          const rules = messages
-            .map(m => {
-              let title = ""
-              let text = ""
-              if (m.embeds && m.embeds.length > 0) {
-                const e = m.embeds[0]
-                title = e.title || ""
-                if (e.fields) {
-                  text = e.fields.map((f: any) => `**${f.name}**\n${f.value}`).join('\n\n')
-                }
-                if (e.description) {
-                  text = text ? text + '\n\n' + e.description : e.description
-                }
-              }
-              if (m.content && m.content.trim().length > 0) {
-                title = title || m.content?.split('\n')[0]?.replace(/^#+\s*/, '').replace(/[*_~>`]/g, '').slice(0, 100) || 'Rule'
-                text = text ? text + '\n\n' + m.content : m.content
-              }
-              if (!title && !text) return null
-              return {
-                id: m.id,
-                title: title || 'Rule',
-                text,
-              }
-            })
-            .filter((r): r is { id: string; title: string; text: string } => r !== null)
-            .reverse()
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(rules))
         } catch {
           res.statusCode = 502
           res.setHeader('Content-Type', 'application/json')

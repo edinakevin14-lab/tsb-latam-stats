@@ -48,12 +48,6 @@ type NewsItem = {
   imageUrl?: string
 }
 
-type RuleItem = {
-  id: string
-  title: string
-  text: string
-}
-
 type ParsedRank = { phase: number; tier: string; subTier: string; value: number } | null
 
 const C = {
@@ -224,7 +218,7 @@ const SUBTIER_OPTS = [
   { value: "weak", label: "Weak" },
 ]
 
-type View = "home" | "rankings" | "countries" | "rules"
+type View = "home" | "rankings" | "countries"
 
 export default function App() {
   const [data, setData] = useState<ApiData | null>(null)
@@ -244,8 +238,6 @@ export default function App() {
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   const [news, setNews] = useState<NewsItem[]>(initialNews)
-  const [rules, setRules] = useState<RuleItem[]>([])
-  const [rulesLoaded, setRulesLoaded] = useState(false)
 
   const [adminOpen, setAdminOpen] = useState(false)
   const [adminPass, setAdminPass] = useState("")
@@ -284,15 +276,6 @@ export default function App() {
     const interval = setInterval(fetchNews, 3000)
     return () => clearInterval(interval)
   }, [])
-
-  useEffect(() => {
-    if (!rulesLoaded) {
-      fetch("/api/discord-rules")
-        .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json() })
-        .then((items: RuleItem[]) => { setRules(items); setRulesLoaded(true) })
-        .catch(() => setRulesLoaded(true))
-    }
-  }, [rulesLoaded])
 
   const sortedPlayers = data
     ? [...data.registered_players].sort((a, b) => rankValue(a.rank) - rankValue(b.rank))
@@ -443,7 +426,6 @@ export default function App() {
             <button onClick={() => { setView("home"); setSelected(null) }} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: view === "home" ? 700 : 400, color: view === "home" ? C.accent : C.textDim, fontSize: 14 }}>Home</button>
             <button onClick={() => setView("rankings")} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: view === "rankings" ? 700 : 400, color: view === "rankings" ? C.accent : C.textDim, fontSize: 14 }}>Player Ranking</button>
             <button onClick={() => setView("countries")} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: view === "countries" ? 700 : 400, color: view === "countries" ? C.accent : C.textDim, fontSize: 14 }}>Region Ranking</button>
-            <button onClick={() => setView("rules")} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: view === "rules" ? 700 : 400, color: view === "rules" ? C.accent : C.textDim, fontSize: 14 }}>Rules</button>
           </nav>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -939,36 +921,6 @@ export default function App() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Rules view */}
-      {view === "rules" && (
-        <div style={{
-          maxWidth: 1100, margin: "0 auto", background: C.surface,
-          minHeight: "calc(100vh - 140px)",
-        }}>
-          <div style={{ padding: "28px 32px" }}>
-            <h3 style={{ margin: "0 0 24px", fontSize: 18, fontWeight: 700, color: C.text }}>1v1 Rules</h3>
-            {rules.length === 0 ? (
-              <div style={{ color: C.textMuted, fontSize: 14, padding: "20px 0" }}>No rules found.</div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {rules.map((rule, i) => (
-                  <div key={rule.id} style={{
-                    padding: "18px 22px", background: C.elevated, borderRadius: 6,
-                  }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: C.text }}>
-                      {i + 1}. {rule.title}
-                    </div>
-                    <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
-                      {rule.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}

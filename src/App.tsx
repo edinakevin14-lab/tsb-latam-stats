@@ -440,7 +440,7 @@ export default function App() {
       {view === "home" && !selected && data && (
         <div style={{
           maxWidth: 1100, margin: "0 auto", background: C.surface,
-          border: `1px solid ${C.border}`, borderTop: "none", minHeight: "calc(100vh - 140px)",
+          border: "none", borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           {/* Hero stats */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 0, padding: 0, background: C.surface, borderBottom: `1px solid ${C.border}` }}>
@@ -476,7 +476,7 @@ export default function App() {
 
           {/* Content: recently registered + news */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 260px" }}>
-            <div style={{ padding: "20px 24px", borderRight: `1px solid ${C.border}` }}>
+            <div style={{ padding: "20px 24px" }}>
               <h4 style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 {search ? `Results (${filtered.length})` : "Recently Registered"}
               </h4>
@@ -546,7 +546,7 @@ export default function App() {
         <div style={{
           maxWidth: 1100, margin: "0 auto", display: "grid",
           gridTemplateColumns: "1fr 260px", background: C.surface,
-          border: `1px solid ${C.border}`, borderTop: "none", minHeight: "calc(100vh - 140px)",
+          border: "none", borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           {/* Player detail */}
           <div style={{ padding: "28px 32px" }}>
@@ -622,7 +622,7 @@ export default function App() {
           </div>
 
           {/* News column */}
-          <div style={{ borderLeft: `1px solid ${C.border}`, overflowY: "auto" }}>
+          <div style={{ overflowY: "auto" }}>
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
               <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{
@@ -656,7 +656,7 @@ export default function App() {
         <div style={{
           maxWidth: 1100, margin: "0 auto", display: "grid",
           gridTemplateColumns: "1fr 260px", background: C.surface,
-          border: `1px solid ${C.border}`, borderTop: "none", minHeight: "calc(100vh - 140px)",
+          border: "none", borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           <div style={{ padding: "24px 28px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
@@ -724,7 +724,7 @@ export default function App() {
           </div>
 
           {/* News column */}
-          <div style={{ borderLeft: `1px solid ${C.border}`, overflowY: "auto" }}>
+          <div style={{ overflowY: "auto" }}>
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
               <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{
@@ -760,7 +760,7 @@ export default function App() {
         <div style={{
           maxWidth: 1100, margin: "0 auto", display: "grid",
           gridTemplateColumns: "220px 1fr 260px", background: C.surface,
-          border: `1px solid ${C.border}`, borderTop: "none", minHeight: "calc(100vh - 140px)",
+          border: "none", borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           {/* Left — region list */}
           <div style={{ borderRight: "none" }}>
@@ -906,7 +906,7 @@ export default function App() {
           </div>
 
           {/* News column */}
-          <div style={{ borderLeft: `1px solid ${C.border}`, overflowY: "auto" }}>
+          <div style={{ overflowY: "auto" }}>
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}` }}>
               <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{

@@ -443,7 +443,7 @@ export default function App() {
           border: `1px solid ${C.border}`, borderTop: "none", minHeight: "calc(100vh - 140px)",
         }}>
           {/* Hero stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 1, background: C.border }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 0, padding: 0, background: C.surface, borderBottom: `1px solid ${C.border}` }}>
             {(() => {
               const total = data.registered_players.length
               const p1 = countP1Verified(data.registered_players)
@@ -455,7 +455,7 @@ export default function App() {
                 { label: "Regions", value: regions },
                 { label: "#1 Player", value: top ? top.profile_name : "-" },
               ].map((s, i) => (
-                <div key={i} style={{ background: C.surface, padding: "20px 18px", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div key={i} style={{ padding: "20px 18px", display: "flex", flexDirection: "column", gap: 4, borderRight: i < 3 ? `1px solid ${C.border}` : "none" }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{s.label}</span>
                   <span style={{ fontSize: 22, fontWeight: 900, color: s.label === "#1 Player" ? C.win : C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.value}</span>
                 </div>
@@ -576,24 +576,24 @@ export default function App() {
             </div>
 
             {/* Stats grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: C.border, marginBottom: 1 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
               {[
                 { label: "Rank", value: selected.rank === "N/A" ? "Unranked" : selected.rank },
                 { label: "Region", value: selected.region === "N/A" ? "N/A" : selected.region },
                 { label: "ELO", value: String(selected.elo) },
               ].map((s, idx) => (
-                <div key={idx} style={{ background: C.elevated, padding: "14px 16px" }}>
+                <div key={idx} style={{ background: C.elevated, padding: "14px 16px", borderRadius: 4 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{s.label}</div>
                   <div style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>{s.value}</div>
                 </div>
               ))}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: C.border }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { label: "Winrate", value: `${parseWl(selected.wl).winrate}%` },
                 { label: "Record", value: (() => { const w = parseWl(selected.wl); return `${w.wins}W / ${w.losses}L` })() },
               ].map((s, idx) => (
-                <div key={idx} style={{ background: C.elevated, padding: "14px 16px" }}>
+                <div key={idx} style={{ background: C.elevated, padding: "14px 16px", borderRadius: 4 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{s.label}</div>
                   <div style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>{s.value}</div>
                 </div>

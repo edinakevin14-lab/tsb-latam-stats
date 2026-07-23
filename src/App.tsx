@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 
 type Match = {
   timestamp: number
@@ -314,15 +314,7 @@ export default function App() {
 
   const [news, setNews] = useState<NewsItem[]>(initialNews)
 
-  const [adminOpen, setAdminOpen] = useState(false)
   const [newsModal, setNewsModal] = useState<NewsItem | null>(null)
-  const [adminPass, setAdminPass] = useState("")
-  const [adminAuthed, setAdminAuthed] = useState(false)
-  const [adminError, setAdminError] = useState("")
-  const [adminTab, setAdminTab] = useState<"players" | "news">("players")
-
-  const [newsDraft, setNewsDraft] = useState<{ title: string; text: string; imageUrl: string }>({ title: "", text: "", imageUrl: "" })
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     fetch("/api/leaderboard")
@@ -376,36 +368,6 @@ export default function App() {
   function resetFilters() {
     setPhaseFilter("all"); setTierFilter("all"); setSubTierFilter("all")
   }
-
-  function handleAdminLogin() {
-    if (adminPass === "admin123") {
-      setAdminAuthed(true); setAdminError(""); setAdminPass("")
-    } else {
-      setAdminError("Wrong password")
-    }
-  }
-
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > 4 * 1024 * 1024) { alert("Image too large (max 4MB)"); return }
-    const reader = new FileReader()
-    reader.onload = () => setNewsDraft(d => ({ ...d, imageUrl: reader.result as string }))
-    reader.readAsDataURL(file)
-  }
-
-  function handlePublishNews() {
-    if (!newsDraft.title.trim() || !newsDraft.text.trim()) { alert("Title and text are required"); return }
-    const item: NewsItem = {
-      id: Date.now(), title: newsDraft.title.trim(), text: newsDraft.text.trim(),
-      date: new Date().toISOString().slice(0, 10), imageUrl: newsDraft.imageUrl || undefined,
-    }
-    setNews([item, ...news])
-    setNewsDraft({ title: "", text: "", imageUrl: "" })
-    if (fileInputRef.current) fileInputRef.current.value = ""
-  }
-
-  function handleDeleteNews(id: number) { setNews(news.filter(n => n.id !== id)) }
 
   if (loading) {
     return (
@@ -505,9 +467,6 @@ export default function App() {
           </nav>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {view === "home" && (
-            <button onClick={() => setAdminOpen(true)} style={{ background: C.elevated, border: `1px solid ${C.borderLight}`, borderRadius: 4, cursor: "pointer", padding: "4px 10px", fontSize: 13, color: C.textDim }}>Admin</button>
-          )}
           <span style={{ fontSize: 16, color: C.textDim }}>▾</span>
         </div>
       </div>
@@ -1040,93 +999,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Admin modal */}
-      {adminOpen && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }} onClick={() => { setAdminOpen(false); setAdminAuthed(false); setAdminError("") }}>
-          <div style={{ background: C.surface, borderRadius: 8, padding: 24, width: 480, maxWidth: "90vw", boxSizing: "border-box", border: `1px solid ${C.border}` }} onClick={e => e.stopPropagation()}>
-            {!adminAuthed ? (
-              <>
-                <h3 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 700, color: C.text }}>Admin Login</h3>
-                <input
-                  type="password" placeholder="Password" value={adminPass}
-                  onChange={e => setAdminPass(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleAdminLogin()}
-                  style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.borderLight}`, borderRadius: 4, fontSize: 14, boxSizing: "border-box", marginBottom: 8, background: C.elevated, color: C.text, outline: "none" }}
-                />
-                {adminError && <div style={{ color: C.loss, fontSize: 12, marginBottom: 8 }}>{adminError}</div>}
-                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button onClick={() => { setAdminOpen(false); setAdminError("") }} style={{ padding: "6px 14px", border: `1px solid ${C.borderLight}`, borderRadius: 4, cursor: "pointer", background: "none", fontSize: 13, color: C.textDim }}>Cancel</button>
-                  <button onClick={handleAdminLogin} style={{ padding: "6px 14px", border: "none", borderRadius: 4, cursor: "pointer", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700 }}>Login</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>Admin Panel</h3>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button onClick={() => setAdminTab("players")} style={{ padding: "4px 12px", border: `1px solid ${C.borderLight}`, borderRadius: 4, cursor: "pointer", background: adminTab === "players" ? C.accentSoft : "none", color: adminTab === "players" ? C.accent : C.textDim, fontSize: 12 }}>Players</button>
-                    <button onClick={() => setAdminTab("news")} style={{ padding: "4px 12px", border: `1px solid ${C.borderLight}`, borderRadius: 4, cursor: "pointer", background: adminTab === "news" ? C.accentSoft : "none", color: adminTab === "news" ? C.accent : C.textDim, fontSize: 12 }}>News</button>
-                  </div>
-                </div>
-
-                {adminTab === "players" && (
-                  <>
-                    <div style={{ fontSize: 13, color: C.textDim, marginBottom: 12 }}>Loaded from Meteorite API. Total: {data?.registered_players.length} players.</div>
-                    <div style={{ maxHeight: 300, overflowY: "auto" }}>
-                      {sortedPlayers.map((p, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <Avatar url={p.roblox_avatar_url} name={p.profile_name} size={24} />
-                            <span title={p.profile_verified ? "Rank verified" : undefined} style={{ fontWeight: 700, color: p.profile_verified ? C.win : C.text }}>{p.profile_name}</span>
-                            <span style={{ color: C.textMuted, fontSize: 11 }}>{p.wl}</span>
-                          </div>
-                          <span style={{ fontSize: 11, color: C.textMuted }}>{p.rank === "N/A" ? "Unranked" : p.rank}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {adminTab === "news" && (
-                  <>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16, padding: 12, background: C.elevated, borderRadius: 4, border: `1px solid ${C.border}` }}>
-                      <input type="text" placeholder="News title" value={newsDraft.title} onChange={e => setNewsDraft(d => ({ ...d, title: e.target.value }))} style={{ padding: "8px 12px", border: `1px solid ${C.borderLight}`, borderRadius: 4, fontSize: 14, background: C.surface, color: C.text, outline: "none", boxSizing: "border-box" }} />
-                      <textarea placeholder="News text" value={newsDraft.text} rows={3} onChange={e => setNewsDraft(d => ({ ...d, text: e.target.value }))} style={{ padding: "8px 12px", border: `1px solid ${C.borderLight}`, borderRadius: 4, fontSize: 14, background: C.surface, color: C.text, outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }} />
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <label style={{ fontSize: 12, color: C.textDim, fontWeight: 700 }}>Image (optional)</label>
-                        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ fontSize: 12, color: C.textDim }} />
-                        {newsDraft.imageUrl && (
-                          <div style={{ position: "relative", width: "100%" }}>
-                            <img src={newsDraft.imageUrl} alt="preview" style={{ width: "100%", borderRadius: 4, border: `1px solid ${C.border}`, display: "block" }} />
-                            <button onClick={() => { setNewsDraft(d => ({ ...d, imageUrl: "" })); if (fileInputRef.current) fileInputRef.current.value = "" }} style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.7)", color: "#fff", border: "none", borderRadius: 3, padding: "2px 8px", cursor: "pointer", fontSize: 12 }}>✕</button>
-                          </div>
-                        )}
-                      </div>
-                      <button onClick={handlePublishNews} style={{ padding: "8px", border: "none", borderRadius: 4, cursor: "pointer", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700 }}>Publish</button>
-                    </div>
-                    <div style={{ maxHeight: 240, overflowY: "auto" }}>
-                      {news.map(n => (
-                        <div key={n.id} style={{ display: "flex", gap: 8, padding: "8px 0", alignItems: "flex-start" }}>
-                          {n.imageUrl && <img src={n.imageUrl} alt={n.title} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 3, flexShrink: 0, border: `1px solid ${C.border}` }} />}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>{n.title}</div>
-                            <div style={{ fontSize: 11, color: C.textMuted }}>{n.date}</div>
-                          </div>
-                          <button onClick={() => handleDeleteNews(n.id)} style={{ padding: "2px 8px", border: `1px solid ${C.loss}`, borderRadius: 3, cursor: "pointer", background: "none", color: C.loss, fontSize: 12 }}>Delete</button>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-                  <button onClick={() => { setAdminOpen(false); setAdminAuthed(false) }} style={{ padding: "6px 14px", border: `1px solid ${C.borderLight}`, borderRadius: 4, cursor: "pointer", background: "none", fontSize: 13, color: C.textDim }}>Close</button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

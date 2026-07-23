@@ -46,6 +46,8 @@ type NewsItem = {
   date: string
   text: string
   imageUrl?: string
+  author?: string
+  authorAvatar?: string
 }
 
 type ParsedRank = { phase: number; tier: string; subTier: string; value: number } | null
@@ -575,7 +577,11 @@ export default function App() {
                       </div>
                     )}
                     <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.text }}>{n.title}</div>
-                    <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{n.date}</div>
+                    <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                      {n.authorAvatar && <img src={n.authorAvatar} alt={n.author} style={{ width: 16, height: 16, borderRadius: "50%" }} />}
+                      {n.author && <span style={{ color: C.textDim, fontWeight: 600 }}>{n.author}</span>}
+                      <span>{n.date}</span>
+                    </div>
                     {n.text && <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6, maxHeight: 66, overflow: "hidden" }}><DiscordMarkdown text={n.text} /></div>}
                   </div>
                 ))}
@@ -1002,7 +1008,11 @@ export default function App() {
               </div>
             )}
             <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, color: C.text }}>{newsModal.title}</div>
-            <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 16 }}>{newsModal.date}</div>
+            <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
+              {newsModal.authorAvatar && <img src={newsModal.authorAvatar} alt={newsModal.author} style={{ width: 20, height: 20, borderRadius: "50%" }} />}
+              {newsModal.author && <span style={{ color: C.textDim, fontWeight: 600 }}>{newsModal.author}</span>}
+              <span>{newsModal.date}</span>
+            </div>
             {newsModal.text && <div style={{ fontSize: 14, color: C.textDim, lineHeight: 1.7 }}><DiscordMarkdown text={newsModal.text} /></div>}
             <button onClick={() => setNewsModal(null)} style={{ marginTop: 20, padding: "8px 16px", background: C.elevated, border: `1px solid ${C.borderLight}`, borderRadius: 4, cursor: "pointer", color: C.textDim, fontSize: 13 }}>Close</button>
           </div>

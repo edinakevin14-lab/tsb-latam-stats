@@ -460,7 +460,7 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
           const grouped: any[] = []
           for (const m of todayMsgs) {
             const last = grouped[grouped.length - 1]
-            if (last && last.author === m.author && Math.abs(new Date(m.timestamp).getTime() - last.timestamp) < 5 * 60 * 1000) {
+            if (last && last.author === m.author && Math.abs(new Date(m.timestamp).getTime() - last.timestamp) < 10 * 60 * 1000) {
               if (m.content && m.content.trim()) last.contents.push(m.content)
               if (m.attachments?.[0]?.content_type?.startsWith('image/') && !last.imageUrl) {
                 last.imageUrl = m.attachments[0].url
@@ -510,6 +510,8 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
                 id: g.id,
                 title,
                 text: description,
+                author: g.author?.display_name || g.author?.username || g.author?.global_name || "Unknown",
+                authorAvatar: g.author?.avatar ? `https://cdn.discordapp.com/avatars/${g.author.id}/${g.author.avatar}.png?size=64` : undefined,
                 date: new Date(g.timestamp).toISOString().slice(0, 10),
                 imageUrl,
               }

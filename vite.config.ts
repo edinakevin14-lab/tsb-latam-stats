@@ -415,8 +415,10 @@ function discordNewsProxy(env: Record<string, string>): Plugin {
             return
           }
           const messages = await r.json() as any[]
+          const today = new Date().toISOString().slice(0, 10)
           const news = messages
             .filter(m => m.content && m.content.trim().length > 0)
+            .filter(m => new Date(m.timestamp).toISOString().slice(0, 10) >= today)
             .map(m => {
               const lines = m.content.split('\n').filter((l: string) => l.trim())
               const firstLine = lines[0] || 'Announcement'

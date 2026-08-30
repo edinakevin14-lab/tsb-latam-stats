@@ -33,6 +33,42 @@ export default defineConfig(({ mode }) => {
   }
 })
 
+/** Transforms the new /v2/leaderboards response into the shape the frontend expects. */
+function transformMeteorite(data: any): any {
+  const leaderboards = Array.isArray(data.leaderboards) ? data.leaderboards : []
+  const withEntries = leaderboards
+    .filter((lb) => lb && Array.isArray(lb.entries) && lb.entries.length > 0)
+    .sort((a, b) => (a.slot || 0) - (b.slot || 0))
+  const lb = withEntries[0] || leaderboards[0] || null
+  const leaderboard = lb && Array.isArray(lb.entries) ? lb.entries : []
+  const registered_players = Array.isArray(data.registered_players)
+    ? data.registered_players.map((p: any) => {
+        const memberships: { position?: number }[] = Array.isArray(p.leaderboard_memberships)
+          ? p.leaderboard_memberships
+          : []
+        const positions = memberships
+          .map((m) => m.position)
+          .filter((p2): p2 is number => typeof p2 === 'number' && p2 > 0)
+        return { ...p, top_position: positions.length ? Math.min(...positions) : 'N/A' }
+      })
+    : []
+  return {
+    registered_players,
+    leaderboard,
+    leaderboard_updated_at: lb && lb.updated_at != null ? lb.updated_at : Date.now(),
+    refreshed_at: data.refreshed_at,
+    cache_ttl_seconds: data.cache_ttl_seconds,
+    server: data.server,
+    leaderboards: leaderboards.map((l) => ({
+      slot: l.slot,
+      name: l.name,
+      updated_at: l.updated_at,
+      appearance: l.appearance,
+      entries: l.entries,
+    })),
+  }
+}
+
 /** Proxies /api/leaderboard to the Meteorite API, injecting the secret key server-side. */
 function meteoriteProxy(env: Record<string, string>): Plugin {
   const apiKey = env.METEORITE_API_KEY || process.env.METEORITE_API_KEY
@@ -48,12 +84,19 @@ function meteoriteProxy(env: Record<string, string>): Plugin {
           return
         }
         try {
-          const upstream = await fetch('https://api.meteoritebot.com/v1/leaderboard', {
+          const upstream = await fetch('https://api.meteoritebot.com/v2/leaderboards', {
             headers: { Authorization: `Bearer ${apiKey}` },
           })
+          const raw = await upstream.json()
+          if (!upstream.ok) {
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = upstream.status
+            res.end(JSON.stringify(raw))
+            return
+          }
           res.setHeader('Content-Type', 'application/json')
-          res.statusCode = upstream.status
-          res.end(await upstream.text())
+          res.statusCode = 200
+          res.end(JSON.stringify(transformMeteorite(raw)))
         } catch {
           res.statusCode = 502
           res.setHeader('Content-Type', 'application/json')

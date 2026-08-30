@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       meteoriteProxy(env),
       discordNewsProxy(env),
+      visitsProxy(env),
     ],
     resolve: {
       alias: {
@@ -101,6 +102,41 @@ function meteoriteProxy(env: Record<string, string>): Plugin {
           res.statusCode = 502
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ error: 'Failed to reach Meteorite API' }))
+        }
+      })
+    },
+  }
+}
+
+/** Dev proxy for /api/visits. In production Vercel serves api/visits.ts directly. */
+function visitsProxy(env: Record<string, string>): Plugin {
+  const url = env.KV_REST_API_URL || process.env.KV_REST_API_URL
+  const token = env.KV_REST_API_TOKEN || process.env.KV_REST_API_TOKEN
+  const NAME = 'page_visits'
+  let local: number | null = null
+  return {
+    name: 'visits-proxy',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/api/visits', async (req, res) => {
+        res.setHeader('Content-Type', 'application/json')
+        if (!url || !token) {
+          local = local === null ? 0 : local
+          if (req.method === 'POST') local += 1
+          res.statusCode = 200
+          res.end(JSON.stringify({ total: local }))
+          return
+        }
+        try {
+          const upstream = await fetch(`${url}/incr/${NAME}`, {
+            method: req.method === 'POST' ? 'POST' : 'GET',
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          res.statusCode = 200
+          res.end(await upstream.text())
+        } catch {
+          res.statusCode = 200
+          res.end(JSON.stringify({ total: 0 }))
         }
       })
     },

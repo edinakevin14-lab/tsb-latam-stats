@@ -313,6 +313,7 @@ export default function App() {
   const [data, setData] = useState<ApiData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [visits, setVisits] = useState<number | null>(null)
 
   const [view, setView] = useState<View>("home")
   const [selected, setSelected] = useState<ApiPlayer | null>(null)
@@ -357,6 +358,26 @@ export default function App() {
     fetchNews()
     const interval = setInterval(fetchNews, 15000)
     return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const counted = () => {
+      try { return sessionStorage.getItem("tsb_visit_counted") === "1" } catch { return false }
+    }
+    const mark = () => {
+      try { sessionStorage.setItem("tsb_visit_counted", "1") } catch {}
+    }
+    const load = (count: boolean) =>
+      fetch("/api/visits", { method: count ? "POST" : "GET" })
+        .then(r => r.json())
+        .then((d: { total?: number }) => { if (typeof d.total === "number") setVisits(d.total) })
+        .catch(() => {})
+    if (!counted()) {
+      load(true)
+      mark()
+    } else {
+      load(false)
+    }
   }, [])
 
   const sortedPlayers = data
@@ -479,6 +500,18 @@ export default function App() {
             <button onClick={() => setView("rankings")} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: view === "rankings" ? 700 : 400, color: view === "rankings" ? C.accent : C.textDim, fontSize: 14 }}>Player Ranking</button>
             <button onClick={() => setView("countries")} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: view === "countries" ? 700 : 400, color: view === "countries" ? C.accent : C.textDim, fontSize: 14 }}>Region Ranking</button>
           </nav>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: C.textMuted, fontSize: 12, whiteSpace: "nowrap" }}>
+          {visits !== null && (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span style={{ fontWeight: 700, color: C.textDim }}>{visits.toLocaleString("es")}</span>
+              <span style={{ color: C.textMuted }}>visitas</span>
+            </>
+          )}
         </div>
       </div>
 

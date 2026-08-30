@@ -8,6 +8,7 @@ type Match = {
 }
 
 type ApiPlayer = {
+  discord_username: string
   discord_display_name: string
   profile_name: string
   roblox_username: string
@@ -619,6 +620,9 @@ export default function App() {
                 </div>
                 {selected.roblox_username !== "N/A" && (
                   <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>Roblox: {selected.roblox_username}</div>
+                )}
+                {selected.discord_username && selected.discord_username !== "N/A" && (
+                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>Discord: {selected.discord_username}</div>
                 )}
               </div>
             </div>
